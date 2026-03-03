@@ -1,58 +1,58 @@
+# SIP Doorphone on OpenIPC / SIP Домофон на OpenIPC
 
-SIP Doorphone on OpenIPC / SIP Домофон на OpenIPC
-English | Русский
+[English](#english) | [Русский](#russian)
 
-English
-Complete Guide to Building a SIP Doorphone with OpenIPC
+---
+
+## English
+
+### Complete Guide to Building a SIP Doorphone with OpenIPC
+
 This project turns an IP camera with OpenIPC firmware into a full-featured SIP doorphone with RFID key access, web interface, and remote door control.
 
-📋 Table of Contents
-Hardware Requirements
+### 📋 Table of Contents
+- [Hardware Requirements](#hardware-requirements)
+- [Software Requirements](#software-requirements)
+- [Step 1: Flash OpenIPC with VoIP Support](#step-1-flash-openipc-with-voip-support)
+- [Step 2: Initial Camera Setup](#step-2-initial-camera-setup)
+- [Step 3: ESP32/ESP8266 Controller](#step-3-esp32esp8266-controller)
+- [Step 4: Web Interface Installation](#step-4-web-interface-installation)
+- [Step 5: SIP Configuration](#step-5-sip-configuration)
+- [Step 6: Testing](#step-6-testing)
+- [Troubleshooting](#troubleshooting)
+- [File Structure](#file-structure)
 
-Software Requirements
+### Hardware Requirements
 
-Step 1: Flash OpenIPC with VoIP Support
+| Component | Recommended | Notes |
+|-----------|------------|-------|
+| IP Camera | Uniview C1L-2WN-G with SSC335DE | "People's camera for $5" |
+| Microcontroller | ESP32 (LilyGo T-Call) or ESP8266 (Wemos D1 mini) | For door control |
+| RFID Reader | Wiegand 26/34 (3.3V or 5V) | Any standard reader |
+| Relay Module | 1-channel 5V relay | For door lock control |
+| Reed Switch | NC magnetic contact | Door position sensor |
+| Buttons | 2x momentary buttons | Exit and call buttons |
+| Power Supply | 12V for lock, 5V for ESP | External power |
 
-Step 2: Initial Camera Setup
+### Software Requirements
 
-Step 3: ESP32/ESP8266 Controller
+- OpenIPC firmware with VoIP support (`ssc335de_ultimate_uniview-c1l-2wn-g-voip-nor.tgz`)
+- Arduino IDE for ESP32/ESP8266
+- Python 3 (for initial setup)
+- Web browser for configuration
 
-Step 4: Web Interface Installation
+---
 
-Step 5: SIP Configuration
+### Step 1: Flash OpenIPC with VoIP Support
 
-Step 6: Testing
-
-Troubleshooting
-
-File Structure
-
-Hardware Requirements
-Component	Recommended	Notes
-IP Camera	Uniview C1L-2WN-G with SSC335DE	"People's camera for $5"
-Microcontroller	ESP32 (LilyGo T-Call) or ESP8266 (Wemos D1 mini)	For door control
-RFID Reader	Wiegand 26/34 (3.3V or 5V)	Any standard reader
-Relay Module	1-channel 5V relay	For door lock control
-Reed Switch	NC magnetic contact	Door position sensor
-Buttons	2x momentary buttons	Exit and call buttons
-Power Supply	12V for lock, 5V for ESP	External power
-Software Requirements
-OpenIPC firmware with VoIP support (ssc335de_ultimate_uniview-c1l-2wn-g-voip-nor.tgz)
-
-Arduino IDE for ESP32/ESP8266
-
-Python 3 (for initial setup)
-
-Web browser for configuration
-
-Step 1: Flash OpenIPC with VoIP Support
-1.1 Download the firmware
-bash
+#### 1.1 Download the firmware
+```bash
 # Download the base firmware
 wget https://github.com/OpenIPC/firmware/releases/download/image/openipc-ssc335de-nor-ultimate.bin
 
 # Download the VoIP update
 wget https://github.com/OpenIPC/builder/releases/download/latest/ssc335de_ultimate_uniview-c1l-2wn-g-voip-nor.tgz
+
 1.2 Flash using programmer
 Use a SPI programmer (CH341A, etc.) to flash openipc-ssc335de-nor-ultimate.bin to the camera's NOR flash.
 
@@ -60,32 +60,49 @@ Use a SPI programmer (CH341A, etc.) to flash openipc-ssc335de-nor-ultimate.bin t
 Connect camera via Ethernet (DHCP required). Find its IP address from router DHCP leases.
 
 1.4 Update to VoIP firmware
-bash
+
 # SSH into camera (default password: 123456)
 ssh root@192.168.1.x
 
 # Update firmware (DO NOT use web interface!)
 sysupgrade -k -r -f -n -z --url=https://github.com/OpenIPC/builder/releases/download/latest/ssc335de_ultimate_uniview-c1l-2wn-g-voip-nor.tgz
+
+
 1.5 Configure WiFi (if needed)
+
 bash
 fw_setenv wlanssid "YourWiFiSSID"
 fw_setenv wlanpass "YourWiFiPassword"
 reboot
+
+
+
 Step 2: Initial Camera Setup
 2.1 Connect via SSH
+
 bash
 ssh root@192.168.1.4  # Use your camera's IP
+
 2.2 Configure UART
+
 bash
 # Set permissions for UART
 chmod 666 /dev/ttyS0
 echo 'chmod 666 /dev/ttyS0' >> /etc/rc.local
+
+
+
+
 2.3 Check UART ports
+
 bash
 ls -la /dev/tty*
 # Should show ttyS0, ttyS1, ttyS2
+
+
 Step 3: ESP32/ESP8266 Controller
 3.1 Wiring Diagram
+
 text
 ESP32 (LilyGo T-Call)    Connected Devices
 ---------------------    -----------------
@@ -108,11 +125,14 @@ GPIO15 (TX2) -----------> Camera RX (GPIO15)
 GND   -------------------> Camera GND
 
 External 12V -----------> Lock (via relay contacts)
+
+
 3.2 ESP32 Firmware
-Download the complete firmware from the firmware folder or copy the code below:
+Download the complete firmware from the /firmware folder or copy the code below:
 
 cpp
 // Full ESP32 firmware is available in /firmware/esp32_sip_doorphone.ino
+
 3.3 Install in Arduino IDE
 Install ESP32 board support in Arduino IDE
 
@@ -127,17 +147,21 @@ Upload to ESP32
 3.4 Verify connection
 On the camera, check logs:
 
+
 bash
 tail -f /var/log/door_monitor.log
+
 You should see: ESP reported ready
 
 Step 4: Web Interface Installation
 4.1 Create directory structure
+
 bash
 mkdir -p /var/www/cgi-bin/p
 mkdir -p /var/www/a
+
 4.2 Install web files
-Copy all files from the www folder to /var/www/ on the camera.
+Copy all files from the /www folder to /var/www/ on the camera.
 
 Main files:
 
@@ -162,6 +186,13 @@ Edit /var/www/cgi-bin/p/header.cgi and add:
 html
 <li><a class="dropdown-item" href="/cgi-bin/p/door_keys.cgi">🔑 Door Phone</a></li>
 <li><a class="dropdown-item" href="/cgi-bin/p/sip_manager.cgi">📞 SIP</a></li>
+4.5 Web Interface Screenshots
+Key Management	SIP Settings
+https:///screenshots/1.png?raw=true	https:///screenshots/2.png?raw=true
+Manage RFID keys, view history, open door	Configure SIP account and call number
+Door Status	Event History
+https:///screenshots/3.png?raw=true	https:///screenshots/4.png?raw=true
+Real-time door status with LED indicators	*View last 50 events with auto-refresh*
 Step 5: SIP Configuration
 5.1 Configure SIP account
 Via web interface:
@@ -250,30 +281,11 @@ tail -f /var/log/baresip.log
 # Set call number
 /usr/bin/door_monitor.sh call_number 101
 Troubleshooting
-Problem: No communication with ESP
-Check UART connections (TX->RX, RX->TX)
-
-Verify common GND
-
-Check baud rate (115200)
-
-Problem: SIP not registering
-Check SIP server availability
-
-Verify credentials
-
-Check firewall (port 5060 UDP)
-
-Problem: Web interface 500 error
-Check file permissions (chmod +x *.cgi)
-
-Check syntax: sh -n /path/to/file.cgi
-
-Problem: False key readings
-Add pull-up resistors to Wiegand lines
-
-Adjust MIN_KEY_LENGTH in door_monitor.sh
-
+Problem	Solution
+No communication with ESP	Check UART connections (TX->RX, RX->TX), verify common GND, check baud rate (115200)
+SIP not registering	Check SIP server availability, verify credentials, check firewall (port 5060 UDP)
+Web interface 500 error	Check file permissions (chmod +x *.cgi), check syntax: sh -n /path/to/file.cgi
+False key readings	Add pull-up resistors to Wiegand lines, adjust MIN_KEY_LENGTH in door_monitor.sh
 File Structure
 text
 /usr/bin/
@@ -286,34 +298,26 @@ text
 │   ├── accounts             # SIP account
 │   ├── config               # SIP configuration
 │   └── call_number          # Call button number
-├── door_keys.conf            # Allowed keys database
-└── rc.local                  # Autostart commands
+├── door_keys.conf           # Allowed keys database
+└── rc.local                 # Autostart commands
 
 /var/www/cgi-bin/p/
-├── door_api.cgi              # Key management API
-├── door_keys.cgi             # Key management UI
-├── door_history.cgi          # Event history
-├── sip_api.cgi               # SIP API
-├── sip_manager.cgi           # SIP management UI
-└── sip_save.cgi              # SIP settings saver
+├── door_api.cgi             # Key management API
+├── door_keys.cgi            # Key management UI
+├── door_history.cgi         # Event history
+├── sip_api.cgi              # SIP API
+├── sip_manager.cgi          # SIP management UI
+└── sip_save.cgi             # SIP settings saver
 
 /var/log/
-├── door_monitor.log          # Door events
-└── baresip.log               # SIP events
+├── door_monitor.log         # Door events
+└── baresip.log              # SIP events
 License
 MIT License - feel free to use and modify!
 
 Contributors
 Based on OpenIPC project
 
-Community contributions
-
-Links
-OpenIPC Official Site
-
-OpenIPC GitHub
-
-This Project on GitHub
 
 Russian
 Полное руководство по сборке SIP домофона на OpenIPC
@@ -422,7 +426,7 @@ GND   -------------------> Камера GND
 
 Внешний 12V ------------> Замок (через контакты реле)
 3.2 Прошивка ESP32
-Полный код прошивки доступен в папке firmware.
+Полный код прошивки доступен в папке /firmware.
 
 3.3 Установка в Arduino IDE
 Установите поддержку ESP32 в Arduino IDE
@@ -448,7 +452,7 @@ bash
 mkdir -p /var/www/cgi-bin/p
 mkdir -p /var/www/a
 4.2 Установка файлов
-Скопируйте все файлы из папки www в /var/www/ на камере.
+Скопируйте все файлы из папки /www в /var/www/ на камере.
 
 Основные файлы:
 
@@ -473,6 +477,13 @@ chmod +x /var/www/cgi-bin/p/*.cgi
 html
 <li><a class="dropdown-item" href="/cgi-bin/p/door_keys.cgi">🔑 Домофон</a></li>
 <li><a class="dropdown-item" href="/cgi-bin/p/sip_manager.cgi">📞 SIP</a></li>
+4.5 Скриншоты веб-интерфейса
+Управление ключами	Настройки SIP
+https:///screenshots/1.png?raw=true	https:///screenshots/2.png?raw=true
+Управление RFID ключами, история, открытие двери	Настройка SIP аккаунта и номера вызова
+Статус двери	История событий
+https:///screenshots/3.png?raw=true	https:///screenshots/4.png?raw=true
+Статус двери в реальном времени с LED индикацией	Последние 50 событий с автообновлением
 Шаг 5: Настройка SIP
 5.1 Настройка SIP аккаунта
 Через веб-интерфейс:
@@ -561,30 +572,11 @@ tail -f /var/log/baresip.log
 # Установить номер вызова
 /usr/bin/door_monitor.sh call_number 101
 Решение проблем
-Проблема: Нет связи с ESP
-Проверьте подключение UART (TX->RX, RX->TX)
-
-Проверьте общий GND
-
-Проверьте скорость (115200)
-
-Проблема: SIP не регистрируется
-Проверьте доступность SIP сервера
-
-Проверьте правильность учетных данных
-
-Проверьте файерволл (порт 5060 UDP)
-
-Проблема: Веб-интерфейс ошибка 500
-Проверьте права на файлы (chmod +x *.cgi)
-
-Проверьте синтаксис: sh -n /путь/к/файлу.cgi
-
-Проблема: Ложные срабатывания ключей
-Добавьте подтягивающие резисторы на линии Wiegand
-
-Измените MIN_KEY_LENGTH в door_monitor.sh
-
+Проблема	Решение
+Нет связи с ESP	Проверьте подключение UART (TX->RX, RX->TX), проверьте общий GND, проверьте скорость (115200)
+SIP не регистрируется	Проверьте доступность SIP сервера, проверьте правильность учетных данных, проверьте файерволл (порт 5060 UDP)
+Веб-интерфейс ошибка 500	Проверьте права на файлы (chmod +x *.cgi), проверьте синтаксис: sh -n /путь/к/файлу.cgi
+Ложные срабатывания ключей	Добавьте подтягивающие резисторы на линии Wiegand, измените MIN_KEY_LENGTH в door_monitor.sh
 Структура файлов
 text
 /usr/bin/
@@ -597,57 +589,25 @@ text
 │   ├── accounts             # SIP аккаунт
 │   ├── config               # Конфигурация SIP
 │   └── call_number          # Номер для кнопки вызова
-├── door_keys.conf            # База разрешенных ключей
-└── rc.local                  # Автозапуск
+├── door_keys.conf           # База разрешенных ключей
+└── rc.local                 # Автозапуск
 
 /var/www/cgi-bin/p/
-├── door_api.cgi              # API управления ключами
-├── door_keys.cgi             # Интерфейс управления ключами
-├── door_history.cgi          # История событий
-├── sip_api.cgi               # SIP API
-├── sip_manager.cgi           # Интерфейс управления SIP
-└── sip_save.cgi              # Сохранение настроек SIP
+├── door_api.cgi             # API управления ключами
+├── door_keys.cgi            # Интерфейс управления ключами
+├── door_history.cgi         # История событий
+├── sip_api.cgi              # SIP API
+├── sip_manager.cgi          # Интерфейс управления SIP
+└── sip_save.cgi             # Сохранение настроек SIP
 
 /var/log/
-├── door_monitor.log          # События двери
-└── baresip.log               # События SIP
+├── door_monitor.log         # События двери
+└── baresip.log              # События SIP
 Лицензия
 MIT License - свободно используйте и модифицируйте!
 
-Авторы himik19872
+Авторы
 На основе проекта OpenIPC
 
-Сообщество разработчиков
 
-Ссылки
-Официальный сайт OpenIPC
 
-OpenIPC на GitHub
-
-Этот проект на GitHub
-
-Файлы для репозитория
-Структура репозитория
-text
-sip-doorphone-openipc/
-├── README.md                 # Эта инструкция
-├── firmware/
-│   ├── esp32_sip_doorphone.ino    # Прошивка для ESP32
-│   └── esp8266_sip_doorphone.ino  # Прошивка для ESP8266
-├── www/
-│   ├── cgi-bin/
-│   │   └── p/
-│   │       ├── door_api.cgi
-│   │       ├── door_keys.cgi
-│   │       ├── door_history.cgi
-│   │       ├── sip_api.cgi
-│   │       ├── sip_manager.cgi
-│   │       └── sip_save.cgi
-│   └── header.cgi
-├── scripts/
-│   ├── door_monitor.sh
-│   ├── start_baresip.sh
-│   └── S97baresip
-└── docs/
-    ├── wiring.md
-    └── troubleshooting.md
