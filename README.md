@@ -307,7 +307,8 @@ text
 /var/log/
 ├── door_monitor.log         # Door events
 └── baresip.log              # SIP events
-License
+
+## License
 MIT License - feel free to use and modify!
 
 Contributors
