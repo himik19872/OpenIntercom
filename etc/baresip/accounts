@@ -1,0 +1,2 @@
+# SIP account
+<sip:101@192.168.1.107>;auth_pass=123456;regint=60
