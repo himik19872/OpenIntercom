@@ -1,14 +1,26 @@
 #!/bin/sh
-echo "Content-type: text/html; charset=utf-8"
+# Получаем локальный IP камеры
+CAMERA_IP=$(ip -4 addr show | grep -o '192\.168\.[0-9]*\.[0-9]*' | head -1)
+
+# Если IP не найден, пробуем другие варианты
+if [ -z "$CAMERA_IP" ]; then
+    CAMERA_IP=$(ifconfig | grep -o '192\.168\.[0-9]*\.[0-9]*' | head -1)
+fi
+
+# Если всё ещё нет IP, используем localhost
+if [ -z "$CAMERA_IP" ]; then
+    CAMERA_IP="127.0.0.1"
+fi
+
+# Отправляем HTML с мета-редиректом (работает в любом сервере)
+echo "Content-type: text/html"
 echo ""
-echo '<!DOCTYPE html>'
-echo '<html>'
-echo '<head>'
-echo '<meta charset="UTF-8">'
-echo '<meta http-equiv="refresh" content="2;url=http://192.168.1.4:8080/cgi-bin/p/backup_manager.cgi">'
-echo '</head>'
-echo '<body>'
-echo '<p>Перенаправление на управление бэкапами...</p>'
-echo '<p><a href="http://192.168.1.4:8080/cgi-bin/p/backup_manager.cgi">Нажмите здесь, если не перенаправляет автоматически</a></p>'
-echo '</body>'
-echo '</html>'
+echo "<!DOCTYPE html>"
+echo "<html>"
+echo "<head>"
+echo "<meta http-equiv=\"refresh\" content=\"0;url=http://${CAMERA_IP}:8080/cgi-bin/p/backup_manager.cgi\">"
+echo "</head>"
+echo "<body>"
+echo "<p>Redirecting to <a href=\"http://${CAMERA_IP}:8080/cgi-bin/p/backup_manager.cgi\">Backup Manager</a>...</p>"
+echo "</body>"
+echo "</html>"
